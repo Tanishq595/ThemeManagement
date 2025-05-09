@@ -6,6 +6,7 @@
     <title>Admin Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
         .column-checkbox {
@@ -14,6 +15,11 @@
         }
         .hidden {
             display: none;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
         }
     </style>
 </head>
@@ -27,31 +33,31 @@
         <!-- Data Management Page -->
         <div id="data-management" class="page">
             <h1 class="text-2xl font-bold mb-4">Data Management</h1>
-            
+
             <!-- Column Filter -->
             <div class="mb-4 p-4 bg-white rounded shadow">
                 <h2 class="text-lg font-semibold mb-2">Column Filter</h2>
                 <div id="column-filter"></div>
             </div>
-            
+
             <!-- Search Box -->
             <div class="mb-4">
                 <input type="text" id="search-box" placeholder="Search..." 
                        class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
-            
+
             <!-- Add New Entry Form -->
             <div class="mb-6 p-4 bg-white rounded shadow">
                 <h2 class="text-lg font-semibold mb-2">Add New Entry</h2>
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <input type="text" id="new-name" placeholder="Name" class="p-2 border rounded">
-                    <input type="text" id="new-theme" placeholder="Theme" class="p-2 border rounded">
-                    <input type="text" id="new-subtheme" placeholder="Subtheme" class="p-2 border rounded">
-                    <input type="text" id="new-category" placeholder="Category" class="p-2 border rounded">
+                    <input type="text" id="new-name" placeholder="name" class="p-2 border rounded">
+                    <input type="text" id="new-theme" placeholder="theme" class="p-2 border rounded">
+                    <input type="text" id="new-subtheme" placeholder="subtheme" class="p-2 border rounded">
+                    <input type="text" id="new-category" placeholder="category" class="p-2 border rounded">
                     <button onclick="addNewEntry()" class="p-2 bg-green-500 text-white rounded hover:bg-green-600">Add Entry</button>
                 </div>
             </div>
-            
+
             <!-- Data Table -->
             <div class="overflow-x-auto bg-white rounded shadow">
                 <table id="data-table" class="min-w-full border-collapse">
@@ -64,19 +70,24 @@
         </div>
 
         <!-- Data Visualization Page -->
-        <div id="visualization" class="page hidden">
-            <h1 class="text-2xl font-bold mb-4">Data Visualization</h1>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-white p-4 rounded shadow">
-                    <h2 class="text-lg font-semibold mb-2">Themes Distribution</h2>
-                    <canvas id="theme-chart"></canvas>
-                </div>
-                <div class="bg-white p-4 rounded shadow">
-                    <h2 class="text-lg font-semibold mb-2">Categories Distribution</h2>
-                    <canvas id="category-chart"></canvas>
-                </div>
-            </div>
+        <!-- Data Visualization Page -->
+<div id="visualization" class="page hidden">
+    <h1 class="text-2xl font-bold mb-4">Data Visualization</h1>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white p-4 rounded shadow chart-container">
+            <h2 class="text-lg font-semibold mb-2">Themes Distribution</h2>
+            <div id="theme-chart" style="width: 100%; height: 300px;"></div>
         </div>
+        <div class="bg-white p-4 rounded shadow chart-container">
+            <h2 class="text-lg font-semibold mb-2">Categories Distribution</h2>
+            <div id="category-chart" style="width: 100%; height: 300px;"></div>
+        </div>
+        <div class="bg-white p-4 rounded shadow chart-container">
+            <h2 class="text-lg font-semibold mb-2">Subthemes Distribution</h2>
+            <div id="subtheme-chart" style="width: 100%; height: 300px;"></div>
+        </div>
+    </div>
+</div>
     </div>
 
     <script>
@@ -189,82 +200,94 @@
         }
 
         // Render column filter checkboxes
-        // Render column filter checkboxes
-function renderColumnFilter() {
-    const filterContainer = document.getElementById('column-filter');
-    filterContainer.innerHTML = '<h3 class="mb-2">Select columns to display:</h3>';
+        function renderColumnFilter() {
+            const filterContainer = document.getElementById('column-filter');
+            filterContainer.innerHTML = '<h3 class="mb-2">Select columns to display:</h3>';
 
-    // Define the columns you want to display
-    const columns = ['name', 'Theme', 'Subtheme', 'Category'];
+            // Define the columns you want to display
+            const columns = ['name', 'theme', 'subtheme', 'category'];
 
-    columns.forEach(col => {
-        const checkboxDiv = document.createElement('div');
-        checkboxDiv.className = 'column-checkbox';
+            columns.forEach(col => {
+                const checkboxDiv = document.createElement('div');
+                checkboxDiv.className = 'column-checkbox';
 
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `col-${col}`;
-        checkbox.checked = true; // Default to checked
-        checkbox.onchange = () => toggleColumn(col, checkbox.checked);
-        checkbox.className = 'mr-1';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `col-${col}`;
+                checkbox.checked = true; // Default to checked
+                checkbox.onchange = () => toggleColumn(col, checkbox.checked);
+                checkbox.className = 'mr-1';
 
-        const label = document.createElement('label');
-        label.htmlFor = `col-${col}`;
-        label.textContent = col.charAt(0).toUpperCase() + col.slice(1); // Capitalize the first letter
+                const label = document.createElement('label');
+                label.htmlFor = `col-${col}`;
+                label.textContent = col.charAt(0).toUpperCase() + col.slice(1); // Capitalize the first letter
 
-        checkboxDiv.appendChild(checkbox);
-        checkboxDiv.appendChild(label);
-        filterContainer.appendChild(checkboxDiv);
-    });
-}
+                checkboxDiv.appendChild(checkbox);
+                checkboxDiv.appendChild(label);
+                filterContainer.appendChild(checkboxDiv);
+            });
+        }
+
+        // Define the original column order
+        const columnOrder = ['_id','name', 'theme', 'subtheme', 'category'];
 
         // Toggle column visibility
         function toggleColumn(col, isVisible) {
-            if (isVisible && !visibleColumns.includes(col)) {
-                visibleColumns.push(col);
-            } else if (!isVisible) {
+            if (isVisible) {
+                // Add the column back in the original order
+                if (!visibleColumns.includes(col)) {
+                    // Determine the correct index to insert the column
+                    const index = columnOrder.indexOf(col);
+                    if (index > -1) {
+                        // Insert the column at the correct position
+                        visibleColumns.splice(index, 0, col);
+                    }
+                }
+            } else {
+                // Remove the column
                 visibleColumns = visibleColumns.filter(c => c !== col);
             }
+            
+            // Render the table with the updated column visibility
             renderTable();
         }
 
         // Add new entry
-        // Add new entry
-async function addNewEntry() {
-    const name = document.getElementById('new-name').value.trim();
-    const theme = document.getElementById('new-theme').value.trim();
-    const subtheme = document.getElementById('new-subtheme').value.trim();
-    const category = document.getElementById('new-category').value.trim();
-    
-    if (!name) {
-        alert('Name is required');
-        return;
-    }
-    
-    const newEntry = { 
-        name: name,
-        Theme: theme || undefined, // Use Theme as the key
-        Subtheme: subtheme || undefined, // Use Subtheme as the key
-        Category: category || undefined // Use Category as the key
-    };
-    
-    // Remove undefined properties
-    Object.keys(newEntry).forEach(key => newEntry[key] === undefined && delete newEntry[key]);
-    
-    try {
-        await axios.post('http://localhost:3000/api/data', newEntry);
-        fetchData();
-        
-        // Clear input fields
-        document.getElementById('new-name').value = '';
-        document.getElementById('new-theme').value = '';
-        document.getElementById('new-subtheme').value = '';
-        document.getElementById('new-category').value = '';
-    } catch (error) {
-        console.error('Error adding entry:', error);
-        alert('Failed to add entry. Check console for details.');
-    }
-}
+        async function addNewEntry() {
+            const name = document.getElementById('new-name').value.trim();
+            const theme = document.getElementById('new-theme').value.trim();
+            const subtheme = document.getElementById('new-subtheme').value.trim();
+            const category = document.getElementById('new-category').value.trim();
+            
+            if (!name) {
+                alert('Name is required');
+                return;
+            }
+            
+            const newEntry = { 
+                name: name,
+                theme: theme || undefined,
+                subtheme: subtheme || undefined,
+                category: category || undefined
+            };
+            
+            // Remove undefined properties
+            Object.keys(newEntry).forEach(key => newEntry[key] === undefined && delete newEntry[key]);
+            
+            try {
+                await axios.post('http://localhost:3000/api/data', newEntry);
+                fetchData();
+                
+                // Clear input fields
+                document.getElementById('new-name').value = '';
+                document.getElementById('new-theme').value = '';
+                document.getElementById('new-subtheme').value = '';
+                document.getElementById('new-category').value = '';
+            } catch (error) {
+                console.error('Error adding entry:', error);
+                alert('Failed to add entry. Check console for details.');
+            }
+        }
 
         // Delete entry
         async function deleteEntry(name) {
@@ -282,88 +305,92 @@ async function addNewEntry() {
         // Update charts
         function updateCharts() {
             // Destroy existing charts if they exist
-            if (themeChart) themeChart.destroy();
-            if (categoryChart) categoryChart.destroy();
-            
-            // Extract themes and categories
-            const themes = [];
-            const categories = [];
-            
-            allData.forEach(row => {
-                Object.keys(row).forEach(key => {
-                    if (key.startsWith('Theme') && !themes.includes(key)) {
-                        themes.push(key);
-                    }
-                    if (key.startsWith('Category') && !categories.includes(key)) {
-                        categories.push(key);
-                    }
-                });
+            if (themeChart) themeChart.dispose();
+            if (categoryChart) categoryChart.dispose();
+
+            // Prepare theme data
+            const themeCounts = {};
+            allData.forEach(entry => {
+                themeCounts[entry.theme] = (themeCounts[entry.theme] || 0) + 1;
             });
-            
-            // Count occurrences
-            const themeCounts = themes.map(theme => 
-                allData.filter(row => row[theme] === 'x').length
-            );
-            
-            const categoryCounts = categories.map(category => 
-                allData.filter(row => row[category] === 'x').length
-            );
-            
+
             // Theme chart
-            const themeCtx = document.getElementById('theme-chart').getContext('2d');
-            themeChart = new Chart(themeCtx, {
-                type: 'bar',
-                data: {
-                    labels: themes,
-                    datasets: [{
-                        label: 'Number of Entries',
-                        data: themeCounts,
-                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
+            const themeChartElement = document.getElementById('theme-chart');
+            themeChart = echarts.init(themeChartElement);
+            themeChart.setOption({
+                title: { text: 'Themes Distribution' },
+                tooltip: {},
+                xAxis: { type: 'category', data: Object.keys(themeCounts) },
+                yAxis: { type: 'value' },
+                series: [{
+                    name: 'Number of Entries',
+                    type: 'bar',
+                    data: Object.values(themeCounts),
+                    itemStyle: {
+                        color: 'rgba(54, 162, 235, 0.5)',
+                    },
+                }],
             });
-            
+
+            // Prepare category data
+            const categoryCounts = {};
+            allData.forEach(entry => {
+                categoryCounts[entry.category] = (categoryCounts[entry.category] || 0) + 1;
+            });
+
             // Category chart
-            const categoryCtx = document.getElementById('category-chart').getContext('2d');
-            categoryChart = new Chart(categoryCtx, {
-                type: 'pie',
-                data: {
-                    labels: categories,
-                    datasets: [{
-                        label: 'Number of Entries',
-                        data: categoryCounts,
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.5)',
-                            'rgba(75, 192, 192, 0.5)',
-                            'rgba(255, 205, 86, 0.5)',
-                            'rgba(153, 102, 255, 0.5)',
-                            'rgba(201, 203, 207, 0.5)'
-                        ],
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(255, 205, 86, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(201, 203, 207, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true
-                }
+            const categoryChartElement = document.getElementById('category-chart');
+            categoryChart = echarts.init(categoryChartElement);
+            categoryChart.setOption({
+                title: { text: 'Categories Distribution' },
+                tooltip: { trigger: 'item' },
+                series: [{
+                    name: 'Categories',
+                    type: 'pie',
+                    radius: '50%',
+                    data: Object.entries(categoryCounts).map(([key, value]) => ({ name: key, value })),
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)',
+                        },
+                    },
+                }],
             });
+
+            updateSubthemeChart();
         }
+
+        // Prepare subtheme data
+function updateSubthemeChart() {
+    const subthemeCounts = {};
+    allData.forEach(entry => {
+        const subtheme = entry.subtheme || 'Undefined';
+        subthemeCounts[subtheme] = (subthemeCounts[subtheme] || 0) + 1;
+    });
+
+    // Subtheme chart
+    const subthemeChartElement = document.getElementById('subtheme-chart');
+    const subthemeChart = echarts.init(subthemeChartElement);
+    subthemeChart.setOption({
+        title: { text: 'Subthemes Distribution' },
+        tooltip: { trigger: 'item' },
+        series: [{
+            name: 'Subthemes',
+            type: 'pie',
+            radius: '50%',
+            data: Object.entries(subthemeCounts).map(([key, value]) => ({ name: key, value })),
+            emphasis: {
+                itemStyle: {
+                    shadowBlur: 10,
+                    shadowOffsetX: 0,
+                    shadowColor: 'rgba(0, 0, 0, 0.5)',
+                },
+            },
+        }],
+    });
+}
 
         // Set up search box event listener
         document.getElementById('search-box').addEventListener('input', renderTable);
