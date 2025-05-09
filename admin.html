@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .column-checkbox {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <nav class="mb-6">
+            <button onclick="showPage('data-management')" class="mr-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Data Management</button>
+            <button onclick="showPage('visualization')" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Data Visualization</button>
+        </nav>
+
+        <!-- Data Management Page -->
+        <div id="data-management" class="page">
+            <h1 class="text-2xl font-bold mb-4">Data Management</h1>
+            
+            <!-- Column Filter -->
+            <div class="mb-4 p-4 bg-white rounded shadow">
+                <h2 class="text-lg font-semibold mb-2">Column Filter</h2>
+                <div id="column-filter"></div>
+            </div>
+            
+            <!-- Search Box -->
+            <div class="mb-4">
+                <input type="text" id="search-box" placeholder="Search..." 
+                       class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <!-- Add New Entry Form -->
+            <div class="mb-6 p-4 bg-white rounded shadow">
+                <h2 class="text-lg font-semibold mb-2">Add New Entry</h2>
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <input type="text" id="new-name" placeholder="Name" class="p-2 border rounded">
+                    <input type="text" id="new-theme" placeholder="Theme" class="p-2 border rounded">
+                    <input type="text" id="new-subtheme" placeholder="Subtheme" class="p-2 border rounded">
+                    <input type="text" id="new-category" placeholder="Category" class="p-2 border rounded">
+                    <button onclick="addNewEntry()" class="p-2 bg-green-500 text-white rounded hover:bg-green-600">Add Entry</button>
+                </div>
+            </div>
+            
+            <!-- Data Table -->
+            <div class="overflow-x-auto bg-white rounded shadow">
+                <table id="data-table" class="min-w-full border-collapse">
+                    <thead>
+                        <tr id="table-header" class="bg-gray-200"></tr>
+                    </thead>
+                    <tbody id="table-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Data Visualization Page -->
+        <div id="visualization" class="page hidden">
+            <h1 class="text-2xl font-bold mb-4">Data Visualization</h1>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white p-4 rounded shadow">
+                    <h2 class="text-lg font-semibold mb-2">Themes Distribution</h2>
+                    <canvas id="theme-chart"></canvas>
+                </div>
+                <div class="bg-white p-4 rounded shadow">
+                    <h2 class="text-lg font-semibold mb-2">Categories Distribution</h2>
+                    <canvas id="category-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allData = [];
+        let visibleColumns = [];
+        let themeChart = null;
+        let categoryChart = null;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchData();
+            showPage('data-management');
+        });
+
+        // Show the selected page and hide others
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.add('hidden');
+            });
+            document.getElementById(pageId).classList.remove('hidden');
+            
+            if (pageId === 'visualization') {
+                updateCharts();
+            }
+        }
+
+        // Fetch data from the server
+        async function fetchData() {
+            try {
+                const response = await axios.get('http://localhost:3000/api/data');
+                allData = response.data;
+                updateVisibleColumns();
+                renderTable();
+                renderColumnFilter();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                alert('Failed to fetch data. Check console for details.');
+            }
+        }
+
+        // Update the list of visible columns
+        function updateVisibleColumns() {
+            if (allData.length === 0) return;
+            
+            const allColumns = new Set();
+            allData.forEach(row => {
+                Object.keys(row).forEach(col => {
+                    if (col !== 'password') { // Exclude password if it exists
+                        allColumns.add(col);
+                    }
+                });
+            });
+            
+            visibleColumns = Array.from(allColumns);
+        }
+
+        // Render the data table
+        function renderTable() {
+            const searchTerm = document.getElementById('search-box').value.toLowerCase();
+            const tableHeader = document.getElementById('table-header');
+            const tableBody = document.getElementById('table-body');
+            
+            // Clear existing content
+            tableHeader.innerHTML = '';
+            tableBody.innerHTML = '';
+            
+            // Add headers
+            visibleColumns.forEach(col => {
+                const th = document.createElement('th');
+                th.className = 'p-3 border text-left';
+                th.textContent = col;
+                tableHeader.appendChild(th);
+            });
+            
+            // Add actions header
+            const actionsTh = document.createElement('th');
+            actionsTh.className = 'p-3 border text-left';
+            actionsTh.textContent = 'Actions';
+            tableHeader.appendChild(actionsTh);
+            
+            // Add rows
+            allData.filter(row => {
+                // Filter by search term
+                return Object.values(row).some(val => 
+                    String(val).toLowerCase().includes(searchTerm)
+                );
+            }).forEach(row => {
+                const tr = document.createElement('tr');
+                
+                visibleColumns.forEach(col => {
+                    const td = document.createElement('td');
+                    td.className = 'p-3 border';
+                    td.textContent = row[col] || '';
+                    tr.appendChild(td);
+                });
+                
+                // Add delete button
+                const actionsTd = document.createElement('td');
+                actionsTd.className = 'p-3 border';
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600';
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.onclick = () => deleteEntry(row.name);
+                actionsTd.appendChild(deleteBtn);
+                tr.appendChild(actionsTd);
+                
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // Render column filter checkboxes
+        // Render column filter checkboxes
+function renderColumnFilter() {
+    const filterContainer = document.getElementById('column-filter');
+    filterContainer.innerHTML = '<h3 class="mb-2">Select columns to display:</h3>';
+
+    // Define the columns you want to display
+    const columns = ['name', 'Theme', 'Subtheme', 'Category'];
+
+    columns.forEach(col => {
+        const checkboxDiv = document.createElement('div');
+        checkboxDiv.className = 'column-checkbox';
+
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `col-${col}`;
+        checkbox.checked = true; // Default to checked
+        checkbox.onchange = () => toggleColumn(col, checkbox.checked);
+        checkbox.className = 'mr-1';
+
+        const label = document.createElement('label');
+        label.htmlFor = `col-${col}`;
+        label.textContent = col.charAt(0).toUpperCase() + col.slice(1); // Capitalize the first letter
+
+        checkboxDiv.appendChild(checkbox);
+        checkboxDiv.appendChild(label);
+        filterContainer.appendChild(checkboxDiv);
+    });
+}
+
+        // Toggle column visibility
+        function toggleColumn(col, isVisible) {
+            if (isVisible && !visibleColumns.includes(col)) {
+                visibleColumns.push(col);
+            } else if (!isVisible) {
+                visibleColumns = visibleColumns.filter(c => c !== col);
+            }
+            renderTable();
+        }
+
+        // Add new entry
+        // Add new entry
+async function addNewEntry() {
+    const name = document.getElementById('new-name').value.trim();
+    const theme = document.getElementById('new-theme').value.trim();
+    const subtheme = document.getElementById('new-subtheme').value.trim();
+    const category = document.getElementById('new-category').value.trim();
+    
+    if (!name) {
+        alert('Name is required');
+        return;
+    }
+    
+    const newEntry = { 
+        name: name,
+        Theme: theme || undefined, // Use Theme as the key
+        Subtheme: subtheme || undefined, // Use Subtheme as the key
+        Category: category || undefined // Use Category as the key
+    };
+    
+    // Remove undefined properties
+    Object.keys(newEntry).forEach(key => newEntry[key] === undefined && delete newEntry[key]);
+    
+    try {
+        await axios.post('http://localhost:3000/api/data', newEntry);
+        fetchData();
+        
+        // Clear input fields
+        document.getElementById('new-name').value = '';
+        document.getElementById('new-theme').value = '';
+        document.getElementById('new-subtheme').value = '';
+        document.getElementById('new-category').value = '';
+    } catch (error) {
+        console.error('Error adding entry:', error);
+        alert('Failed to add entry. Check console for details.');
+    }
+}
+
+        // Delete entry
+        async function deleteEntry(name) {
+            if (!confirm(`Are you sure you want to delete ${name}?`)) return;
+            
+            try {
+                await axios.delete(`http://localhost:3000/api/data/${name}`);
+                fetchData();
+            } catch (error) {
+                console.error('Error deleting entry:', error);
+                alert('Failed to delete entry. Check console for details.');
+            }
+        }
+
+        // Update charts
+        function updateCharts() {
+            // Destroy existing charts if they exist
+            if (themeChart) themeChart.destroy();
+            if (categoryChart) categoryChart.destroy();
+            
+            // Extract themes and categories
+            const themes = [];
+            const categories = [];
+            
+            allData.forEach(row => {
+                Object.keys(row).forEach(key => {
+                    if (key.startsWith('Theme') && !themes.includes(key)) {
+                        themes.push(key);
+                    }
+                    if (key.startsWith('Category') && !categories.includes(key)) {
+                        categories.push(key);
+                    }
+                });
+            });
+            
+            // Count occurrences
+            const themeCounts = themes.map(theme => 
+                allData.filter(row => row[theme] === 'x').length
+            );
+            
+            const categoryCounts = categories.map(category => 
+                allData.filter(row => row[category] === 'x').length
+            );
+            
+            // Theme chart
+            const themeCtx = document.getElementById('theme-chart').getContext('2d');
+            themeChart = new Chart(themeCtx, {
+                type: 'bar',
+                data: {
+                    labels: themes,
+                    datasets: [{
+                        label: 'Number of Entries',
+                        data: themeCounts,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // Category chart
+            const categoryCtx = document.getElementById('category-chart').getContext('2d');
+            categoryChart = new Chart(categoryCtx, {
+                type: 'pie',
+                data: {
+                    labels: categories,
+                    datasets: [{
+                        label: 'Number of Entries',
+                        data: categoryCounts,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.5)',
+                            'rgba(75, 192, 192, 0.5)',
+                            'rgba(255, 205, 86, 0.5)',
+                            'rgba(153, 102, 255, 0.5)',
+                            'rgba(201, 203, 207, 0.5)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 205, 86, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(201, 203, 207, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        }
+
+        // Set up search box event listener
+        document.getElementById('search-box').addEventListener('input', renderTable);
+    </script>
+</body>
+</html>
