@@ -24,10 +24,16 @@ npm install
 
 
 Start the server:
-npm start
+```node server.js```
+
+Ensure the server has started. 
+
+Then open another terminal and run ```server```
 
 
-Access the application:Open your browser and go to http://localhost:3000/login.html.
+Note: ```update.js``` uploads the tool_set to the MongoDB database . You can simply run ```node update.js```
+
+Access the application:   Open your browser and go to http://localhost:3000/login.html.
 
 
 ## Technologies Used
