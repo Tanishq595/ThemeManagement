@@ -1,185 +1,91 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white p-8 rounded shadow-md">
+            <h2 class="text-2xl mb-4">Login</h2>
+            <input
+                type="text"
+                id="loginId"
+                placeholder="ID"
+                class="w-full p-2 mb-4 border rounded"
+            />
+            <input
+                type="password"
+                id="loginPassword"
+                placeholder="Password"
+                class="w-full p-2 mb-4 border rounded"
+            />
+            <button
+                id="loginButton"
+                class="w-full p-2 bg-blue-500 text-white rounded"
+            >
+                Login
+            </button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginButton').addEventListener('click', () => {
+            const id = document.getElementById('loginId').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (id === 'apple' && password === 'apple') {
+                window.location.href = 'admin.html'; // Redirect to admin portal
+            } else {
+                alert('Invalid credentials');
+            }
+        });
+    </script>
+</body>
+</html> -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Theme Selector</title>
+    <title>Simple Theme Selector</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color: #6c5ce7;
-            --secondary-color: #a29bfe;
-            --accent-color: #fd79a8;
-            --dark-color: #2d3436;
-            --light-color: #f5f6fa;
-            --success-color: #00b894;
-            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            min-height: 100vh;
-            padding: 2rem;
-            color: var(--dark-color);
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background-color: white;
-            border-radius: 16px;
-            padding: 2.5rem;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .container:hover {
-            box-shadow: var(--shadow-hover);
-        }
-
-        h1 {
-            font-family: 'Montserrat', sans-serif;
-            color: var(--primary-color);
-            text-align: center;
-            margin-bottom: 2rem;
-            font-size: 2.5rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.8rem;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 0.6rem;
-            font-weight: 500;
-            color: var(--dark-color);
-        }
-
-        select {
-            width: 100%;
-            padding: 1rem;
-            border: 2px solid #dfe6e9;
-            border-radius: 8px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 1rem;
-            color: var(--dark-color);
-            background-color: white;
-            appearance: none;
-            transition: var(--transition);
-            cursor: pointer;
-        }
-
-        select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
-        }
-
-        button {
-            display: block;
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            margin-top: 2rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        button:hover {
-            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
-        }
-
-        #randomName {
-            text-align: center;
-            margin-top: 2rem;
-            padding: 1.5rem;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: var(--shadow);
-            font-size: 1.5rem;
-            color: var(--primary-color);
-            font-weight: 600;
-            min-height: 80px;
-        }
-
-        /* Responsive design */
-        @media (max-width: 768px) {
-            .container {
-                padding: 1.5rem;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Theme Selector</h1>
-        
-        <div class="form-group">
-            <label for="theme">Select Theme</label>
-            <select id="theme"></select>
-        </div>
+    <h1>Theme Selector</h1>
+    <label for="theme">Select Theme:</label>
+    <select id="theme"></select>
 
-        <div class="form-group">
-            <label for="subtheme">Select Subtheme</label>
-            <select id="subtheme" disabled></select>
-        </div>
+    <label for="subtheme">Select Subtheme:</label>
+    <select id="subtheme" disabled></select>
 
-        <div class="form-group">
-            <label for="category">Select Category</label>
-            <select id="category" disabled></select>
-        </div>
+    <label for="category">Select Category:</label>
+    <select id="category" disabled></select>
 
-        <button id="randomNameBtn" disabled>Generate Random Name</button>
-        
-        <div id="randomName">Your result will appear here</div>
-    </div>
+    <button id="randomNameBtn" disabled>Get Random Name</button>
+    <h3 id="randomName"></h3>
 
     <script>
         let data = [];
 
         // Fetch data from the server
-        axios.get('http://localhost:3000/api/data')
-            .then(response => {
-                data = response.data;
-                populateThemes();
-            })
-            .catch(error => {
-                console.error('Error fetching data:', error);
-                alert('Failed to fetch data. Check console for details.');
-            });
+        axios.get('http://localhost:3000/api/data').then(response => {
+            data = response.data;
+            populateThemes();
+        }).catch(error => {
+            console.error('Error fetching data:', error);
+            alert('Failed to fetch data. Check console for details.');
+        });
 
         // Populate themes dropdown
         function populateThemes() {
-            const themes = new Set(data.map(row => row.theme).filter(Boolean));
+            const themes = new Set(data.map(row => row.Theme).filter(Boolean));
             const themeSelect = document.getElementById('theme');
             themeSelect.innerHTML = '<option value="">Select a theme</option>';
-            
             themes.forEach(theme => {
                 themeSelect.innerHTML += `<option value="${theme}">${theme}</option>`;
             });
@@ -191,8 +97,8 @@
         function populateSubthemes() {
             const theme = document.getElementById('theme').value;
             const subthemes = new Set(data
-                .filter(row => row.theme === theme)
-                .map(row => row.subtheme)
+                .filter(row => row.Theme === theme)
+                .map(row => row.Subtheme)
                 .filter(Boolean)
             );
 
@@ -210,8 +116,8 @@
         function populateCategories() {
             const subtheme = document.getElementById('subtheme').value;
             const categories = new Set(data
-                .filter(row => row.subtheme === subtheme)
-                .map(row => row.category)
+                .filter(row => row.Subtheme === subtheme)
+                .map(row => row.Category)
                 .filter(Boolean)
             );
 
@@ -223,6 +129,7 @@
             categorySelect.disabled = false;
 
             document.getElementById('randomNameBtn').disabled = false;
+            document.getElementById('randomNameBtn').addEventListener('click', getRandomName);
         }
 
         // Get a random name based on selected options
@@ -231,22 +138,14 @@
             const subtheme = document.getElementById('subtheme').value;
             const category = document.getElementById('category').value;
 
-            // Filter data based on selected theme, subtheme, and category
             const filteredNames = data.filter(row => 
-                row.theme === theme && 
-                row.subtheme === subtheme && 
-                row.category === category
+                row.Theme === theme && row.Subtheme === subtheme && row.Category === category
             );
 
-            // Get a random row from the filtered names
             const randomRow = filteredNames[Math.floor(Math.random() * filteredNames.length)];
 
-            // Display the name or a message if no names are found
             document.getElementById('randomName').innerText = randomRow ? randomRow.name : 'No names found';
         }
-
-        // Event listener for the button
-        document.getElementById('randomNameBtn').addEventListener('click', getRandomName);
     </script>
 </body>
 </html>
