@@ -50,6 +50,10 @@ Access the application:   Open your browser and go to http://localhost:3000/logi
 - **Axios (for making HTTP requests)**
 - **Chart.js (for data visualization)**
 
+
+**User** : apple
+**Pass** : apple
+
 ## How It Works
 
 Login: Access the admin portal through a secure login page.
